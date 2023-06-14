@@ -13,9 +13,9 @@ class PickBox(pygame.sprite.Sprite):
         self.image = self.images[0]
         # 不同系统间图片的默认背景色可能会有所差异，提前设置好
         # (r, g, b, a)
-        self.image.fill((0, 0, 0, 255))
+        self.image.fill((0, 50, 0, 255))
         # 留border个像素出来
-        border = 2
+        border = 3
         self.image.fill((0, 0, 0, 0), (border,) * 2 + (width - 1 - border,) * 2)
         self.image = self.images[1]
         self.image.fill((255, 255, 255, 255))
@@ -49,8 +49,8 @@ class PickBox(pygame.sprite.Sprite):
         # 一格的宽度
         grid = 50
         x, y = pygame.mouse.get_pos()
-        x -= x % grid
-        y -= y % grid
+        x -= (x - grid // 2) % grid
+        y -= (y - grid // 2) % grid
         self.rect.topleft = x, y
 
     def flush(self):
@@ -151,3 +151,32 @@ class WhiteWin(WinMessage):
 class BlackWin(WinMessage):
     def __init__(self):
         WinMessage.__init__(self, (0, 0, 0))
+
+class Back(pygame.sprite.Sprite):
+    def __init__(self):
+        """
+        悔棋按钮
+        """
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((200, 100))
+        self.image.fill((192, 192, 192))
+        font = pygame.font.SysFont("microsoftyaheiui", 50)
+        surf = font.render("悔棋", False, (0, 0, 0))
+        rect = surf.get_rect()
+        rect.center = self.image.get_rect().center
+        self.image.blit(surf, rect)
+        self.rect = self.image.get_rect()
+        self.rect.midright = 900, 350
+
+class Bg(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.image = pygame.Surface((700, 700)).convert_alpha()
+        self.image.fill((0, 0, 0, 0))
+        # 棋盘大小从14x14变成了13x13，然后每个格子的位置也移了
+        # 主要这个700是懒得写676，不想算
+        for x in range(25, 700, 50):
+            pygame.draw.line(self.image, (0, 0, 0, 255), (x, 0), (x, 700), 1)
+        for y in range(25, 700, 50):
+            pygame.draw.line(self.image, (0, 0, 0, 255), (0, y), (700, y), 1)
+        self.rect = self.image.get_rect()

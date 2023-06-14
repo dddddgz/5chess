@@ -13,59 +13,63 @@ def is_five():
             # j：列索引
             if type(chess) == EmptyChess:
                 continue
-            chess2 = chess.left(board)
-            if isinstance(chess2, type(chess)):
-                chess3 = chess2.left(board)
-                if isinstance(chess3, type(chess)):
-                    chess4 = chess3.left(board)
-                    if isinstance(chess4, type(chess)):
-                        chess5 = chess4.left(board)
-                        if isinstance(chess5, type(chess)):
-                            if type(chess) == BlackChess:
-                                state = blackwin
-                            else:
-                                state = whitewin
-            chess2 = chess.up(board)
-            if isinstance(chess2, type(chess)):
-                chess3 = chess2.up(board)
-                if isinstance(chess3, type(chess)):
-                    chess4 = chess3.up(board)
-                    if isinstance(chess4, type(chess)):
-                        chess5 = chess4.up(board)
-                        if isinstance(chess5, type(chess)):
-                            if type(chess) == BlackChess:
-                                state = blackwin
-                            else:
-                                state = whitewin
-            chess2 = chess.up(board).left(board)
-            if isinstance(chess2, type(chess)):
-                chess3 = chess2.up(board).left(board)
-                if isinstance(chess3, type(chess)):
-                    chess4 = chess3.up(board).left(board)
-                    if isinstance(chess4, type(chess)):
-                        chess5 = chess4.up(board).left(board)
-                        if isinstance(chess5, type(chess)):
-                            if type(chess) == BlackChess:
-                                state = blackwin
-                            else:
-                                state = whitewin
-            chess2 = chess.up(board).right(board)
-            if isinstance(chess2, type(chess)):
-                chess3 = chess2.up(board).right(board)
-                if isinstance(chess3, type(chess)):
-                    chess4 = chess3.up(board).right(board)
-                    if isinstance(chess4, type(chess)):
-                        chess5 = chess4.up(board).right(board)
-                        if isinstance(chess5, type(chess)):
-                            if type(chess) == BlackChess:
-                                state = blackwin
-                            else:
-                                state = whitewin
+
+            cur_chess = chess
+            for i in range(2, 6):
+                cur_chess = cur_chess.left(board)
+                if cur_chess not in history:
+                    break
+                if not isinstance(cur_chess, type(chess)):
+                    break
+            else:
+                if isinstance(chess, BlackChess):
+                    state = blackwin
+                else:
+                    state = whitewin
+
+            cur_chess = chess
+            for i in range(2, 6):
+                cur_chess = cur_chess.up(board)
+                if cur_chess not in history:
+                    break
+                if not isinstance(cur_chess, type(chess)):
+                    break
+            else:
+                if isinstance(chess, BlackChess):
+                    state = blackwin
+                else:
+                    state = whitewin
+
+            cur_chess = chess
+            for i in range(2, 6):
+                cur_chess = cur_chess.up(board).left(board)
+                if cur_chess not in history:
+                    break
+                if not isinstance(cur_chess, type(chess)):
+                    break
+            else:
+                if isinstance(chess, BlackChess):
+                    state = blackwin
+                else:
+                    state = whitewin
+
+            cur_chess = chess
+            for i in range(2, 6):
+                cur_chess = cur_chess.up(board).right(board)
+                if cur_chess not in history:
+                    break
+                if not isinstance(cur_chess, type(chess)):
+                    break
+            else:
+                if isinstance(chess, BlackChess):
+                    state = blackwin
+                else:
+                    state = whitewin
 
 # 初始化pygame
 pygame.init()
 # 创建窗口
-size = width, height = (700, 700)
+size = width, height = (1000, 700)
 screen = pygame.display.set_mode(size)
 
 pickbox = PickBox()
@@ -77,6 +81,8 @@ for i, row in enumerate(board):
 whitewin = WhiteWin()
 blackwin = BlackWin()
 history = []
+back = Back()
+bg = Bg()
 
 chess_down = pygame.mixer.Sound('Down.wav')
 
@@ -89,27 +95,35 @@ running = True
 while running:
     clock.tick(30)
     screen.fill((192, 128, 0))
+    screen.blit(bg.image, bg.rect)
     if state is None:
         # 在屏幕内部
         if pygame.mouse.get_focused() != 0:
-            if pygame.mouse.get_pos()[0] < 700:
+            pos = pygame.mouse.get_pos()
+            if 25 <= pos[0] < 675 and 25 <= pos[1] < 675:
                 screen.blit(pickbox.image, pickbox.rect)
+        screen.blit(back.image, back.rect)
     if state is not None:
         screen.blit(state.image, state.rect)
     for row in board:
         for chess in row:
-            screen.blit(chess.image, chess.rect)
+            if chess in history:
+                screen.blit(chess.image, chess.rect)
     pickbox.flush()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
-            if state is None and event.pos[0] < 700:
+            if back.rect.collidepoint(event.pos):
+                history.pop()
+                pickbox.switch()
+            elif state is None and (25 <= event.pos[0] < 675 and
+                                    25 <= event.pos[1] < 675):
                 # x是left，y是top
                 x, y = pickbox.rect.topleft
                 row1 = x // 50
                 col1 = y // 50
-                if not board[col1][row1]:
+                if board[col1][row1] not in history:
                     board[col1][row1] = pickbox.turn()
                     board[col1][row1].rect.topleft = x, y
                     history.append(board[col1][row1])
